@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MILECLAT — Planning</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MILECLAT">
+<meta name="theme-color" content="#0D1B2A">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0D1B2A;--navy2:#1B4F72;--gold:#C9A84C;--gold-light:#E8D5A3;
+  --white:#fff;--grey:#F4F6F7;--border:#D5D8DC;
+  --urgent:#C0392B;--done:#1E8449;--cancelled:#95A5A6;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0D1B2A;min-height:100vh;color:#222;}
+
+/* HEADER */
+.header{background:var(--navy);padding:10px 14px 8px;border-bottom:2px solid var(--gold);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.logo-text{color:var(--gold);font-size:15px;font-weight:700;letter-spacing:1px;}
+.logo-sub{color:var(--gold-light);font-size:9px;}
+.header-right{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.mode-badge{padding:4px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1.5px solid var(--gold);color:var(--gold);}
+.mode-badge.consultant{border-color:#2ECC71;color:#2ECC71;}
+.mode-badge.guest{border-color:#7F8C8D;color:#7F8C8D;}
+.hbtn{background:var(--gold);border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hbtn.grey{background:#2C3E50;}
+.hbtn.red{background:#C0392B;}
+
+/* LÉGENDE */
+.legend-bar{background:#111E2E;padding:7px 14px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid #1E3A5F;align-items:center;flex-wrap:wrap;}
+.legend-bar::-webkit-scrollbar{display:none;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#BDC3C7;white-space:nowrap;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* TOOLBAR */
+.toolbar{background:#111E2E;padding:7px 14px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid #1E3A5F;align-items:center;}
+.toolbar::-webkit-scrollbar{display:none;}
+.week-nav{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.week-nav button{background:#1B2E42;border:1px solid #2E4A6A;color:var(--gold-light);border-radius:6px;padding:4px 9px;font-size:13px;cursor:pointer;}
+.week-label{color:var(--gold);font-size:11px;font-weight:700;white-space:nowrap;}
+.filter-chip{flex-shrink:0;padding:4px 10px;border-radius:20px;border:1px solid #2E4A6A;background:transparent;color:#BDC3C7;font-size:10px;cursor:pointer;white-space:nowrap;}
+.filter-chip.active{background:var(--gold);color:var(--navy);font-weight:700;border-color:var(--gold);}
+.tbtn{flex-shrink:0;border:none;border-radius:7px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+/* STATS BAR */
+.stats-bar{background:#0F1F30;padding:6px 14px;display:flex;gap:10px;border-bottom:1px solid #1E3A5F;align-items:center;overflow-x:auto;scrollbar-width:none;}
+.stats-bar::-webkit-scrollbar{display:none;}
+.stat-item{color:#BDC3C7;font-size:10px;white-space:nowrap;}
+.stat-item strong{color:var(--gold);}
+
+/* CALENDRIER */
+.calendar-wrap{overflow-x:auto;background:#0D1B2A;min-height:calc(100vh - 180px);}
+.calendar{display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));min-width:700px;}
+.day-col{border-right:1px solid #1E3A5F;}
+.day-col:last-child{border-right:none;}
+.day-header{background:#111E2E;padding:7px 6px;text-align:center;border-bottom:2px solid #1E3A5F;position:sticky;top:0;z-index:10;}
+.day-name{color:var(--gold);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.day-date{color:#7F8C8D;font-size:10px;margin-top:1px;}
+.day-header.today{background:#1B2E42;}
+.day-header.today .day-name{color:#FFD700;}
+.day-content{padding:5px;min-height:200px;}
+
+/* MISSION CARD */
+.m-card{border-radius:8px;margin-bottom:5px;overflow:hidden;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.3);transition:transform .1s;}
+.m-card:active{transform:scale(0.98);}
+.m-card.cancelled{opacity:0.5;filter:grayscale(0.8);}
+.m-card-head{padding:6px 8px 4px;}
+.m-card-name{font-size:11px;font-weight:700;color:white;line-height:1.2;}
+.m-card-time{font-size:9px;color:rgba(255,255,255,0.75);margin-top:1px;}
+.m-card-addr{font-size:9px;color:rgba(255,255,255,0.65);margin-top:1px;}
+.m-card-bottom{padding:3px 8px 5px;background:rgba(0,0,0,0.15);display:flex;justify-content:space-between;align-items:center;}
+.m-card-moods{display:flex;gap:2px;font-size:13px;}
+.m-card-badge{font-size:8px;color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.15);padding:1px 5px;border-radius:8px;}
+.cancelled-label{font-size:9px;color:#FF6B6B;font-weight:700;}
+.bg-colette{background:linear-gradient(135deg,#1B4F72,#2980B9);}
+.bg-aloha{background:linear-gradient(135deg,#1A7A4A,#27AE60);}
+.bg-paradise{background:linear-gradient(135deg,#7D3C98,#9B59B6);}
+.bg-autre{background:linear-gradient(135deg,#E67E22,#F39C12);}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:500;display:flex;align-items:flex-end;justify-content:center;}
+.overlay.hidden{display:none;}
+.sheet{background:white;border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;}
+.sh-head{padding:13px 16px 10px;border-bottom:2px solid var(--navy);position:sticky;top:0;background:white;z-index:10;}
+.sh-head-row{display:flex;justify-content:space-between;align-items:flex-start;}
+.sh-title{font-size:15px;font-weight:700;color:var(--navy);}
+.sh-close{background:var(--grey);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px;flex-shrink:0;}
+.sh-sub{font-size:10px;color:#888;margin-top:2px;}
+.sh-body{padding:13px 16px;}
+
+/* LOGIN */
+.role-btn{width:100%;padding:11px;border-radius:10px;border:2px solid #E0E0E0;background:var(--grey);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.role-btn:hover{border-color:var(--gold);}
+.consult-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px;}
+.consult-btn{padding:12px 6px;border-radius:10px;border:2px solid #E0E0E0;background:var(--grey);text-align:center;cursor:pointer;}
+.consult-btn:hover{border-color:var(--gold);}
+.consult-btn .ce{font-size:24px;display:block;margin-bottom:2px;}
+.consult-btn span{font-size:10px;font-weight:600;color:#555;}
+.pin-wrap{margin-top:10px;}
+.pin-wrap label{display:block;font-size:10px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:3px;}
+.pin-wrap input{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:20px;letter-spacing:8px;text-align:center;font-weight:700;color:var(--navy);}
+.pin-submit{width:100%;padding:12px;background:var(--navy);color:var(--gold);border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:7px;}
+.pin-error{color:var(--urgent);font-size:12px;text-align:center;margin-top:5px;display:none;}
+
+/* SECTIONS */
+.section{margin-bottom:13px;}
+.sec-title{font-size:10px;font-weight:700;color:var(--navy2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;padding-bottom:3px;border-bottom:1px solid var(--border);}
+.info-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid #F5F5F5;}
+.info-row:last-child{border-bottom:none;}
+.info-label{color:#777;}
+.info-val{font-weight:600;color:var(--navy);text-align:right;max-width:62%;}
+.code-box{background:var(--navy);color:var(--gold);border-radius:7px;padding:7px 12px;font-size:14px;font-weight:700;letter-spacing:3px;display:inline-block;margin-bottom:5px;}
+.acces-text{font-size:11px;color:#555;line-height:1.6;background:#F8F9FA;border-radius:6px;padding:7px;border-left:3px solid var(--gold);}
+.notes-box{font-size:11px;color:#7D5A0B;background:#FEF9EC;border-radius:6px;padding:7px;border-left:3px solid var(--gold);}
+
+/* HUMEURS */
+.moods-grid{display:flex;gap:6px;flex-wrap:wrap;}
+.mood-pill{display:flex;align-items:center;gap:4px;border:2px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;cursor:pointer;background:var(--grey);transition:all .15s;user-select:none;}
+.mood-pill.selected{background:var(--navy);border-color:var(--gold);color:var(--gold);font-weight:700;}
+.mood-pill.locked{cursor:default;}
+.mood-pill .remove-mood{font-size:10px;color:#C0392B;margin-left:3px;font-weight:700;}
+
+/* COMMENTAIRES */
+.comment-list{margin-bottom:8px;}
+.comment-item{background:#F8F9FA;border-radius:8px;padding:8px;margin-bottom:6px;border-left:3px solid var(--gold);}
+.comment-meta{font-size:9px;color:#999;margin-bottom:3px;}
+.comment-text{font-size:11px;color:#333;line-height:1.5;}
+.comment-add{display:flex;gap:6px;margin-top:6px;}
+.comment-add textarea{flex:1;padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;resize:none;height:50px;}
+.comment-add button{background:var(--navy);color:var(--gold);border:none;border-radius:8px;padding:0 12px;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* PHOTOS */
+.photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.photo-add{border:2px dashed var(--border);border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;background:var(--grey);color:#aaa;}
+.photo-thumb{border-radius:8px;aspect-ratio:1;object-fit:cover;width:100%;}
+
+/* DONE / ANNULÉ */
+.action-row{display:flex;align-items:center;gap:7px;padding:9px 0;cursor:pointer;border-top:1px solid var(--border);user-select:none;}
+.cbx{width:21px;height:21px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cbx.on{background:var(--done);border-color:var(--done);}
+.cbx.on::after{content:"✓";color:white;font-size:12px;font-weight:700;}
+.cbx.cancel{background:var(--cancelled);border-color:var(--cancelled);}
+.cbx.cancel::after{content:"✕";color:white;font-size:12px;font-weight:700;}
+.action-lbl{font-size:12px;color:#777;font-weight:600;}
+
+/* ACTION BUTTONS */
+.action-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.ab{flex:1;min-width:80px;padding:9px 6px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;text-align:center;}
+.ab-edit{background:var(--navy);color:var(--gold);}
+.ab-move{background:#1A7A4A;color:white;}
+.ab-cancel{background:#FEF0EF;color:var(--urgent);border:1px solid var(--urgent);}
+.ab-delete{background:var(--urgent);color:white;}
+.ab-restore{background:#E8F8F5;color:#1E8449;border:1px solid #1E8449;}
+
+/* FORM */
+.f-group{margin-bottom:9px;}
+.f-label{display:block;font-size:10px;font-weight:700;color:#777;letter-spacing:1px;margin-bottom:2px;}
+.f-input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:white;}
+.f-select{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:white;}
+.f-textarea{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;height:65px;resize:vertical;}
+.f-2col{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.supply-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.supply-item{display:flex;flex-direction:column;}
+.supply-item label{font-size:9px;color:#888;margin-bottom:2px;}
+.supply-item input{padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px;}
+.urg-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;}
+.urg-row.on{border-color:var(--urgent);background:#FEF0EF;}
+.f-submit{width:100%;padding:12px;background:var(--navy);color:var(--gold);border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:7px;}
+
+/* IMPORT */
+.import-zone{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:var(--grey);}
+.import-zone:hover{border-color:var(--navy2);}
+
+/* HUMEUR MANAGER */
+.humeur-item{display:flex;align-items:center;justify-content:space-between;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--grey);}
+.humeur-emoji{font-size:22px;margin-right:8px;}
+.humeur-name{font-size:12px;font-weight:600;flex:1;}
+.humeur-del{background:var(--urgent);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><div class="logo-text">🏠 MILECLAT</div><div class="logo-sub" id="headerSub">Planning Missions</div></div>
+  <div class="header-right">
+    <div class="mode-badge guest" id="modeBadge">👁 Visiteur</div>
+    <button class="hbtn" onclick="openLogin()" title="Connexion">🔑</button>
+    <button class="hbtn grey" id="addBtn" onclick="openAddModal()" style="display:none" title="Ajouter">+</button>
+    <button class="hbtn grey" id="importBtn" onclick="openImportModal()" style="display:none" title="Import">📥</button>
+    <button class="hbtn grey" id="exportBtn" onclick="exportJSON()" style="display:none" title="Export">📤</button>
+    <button class="hbtn grey" id="humeurMgrBtn" onclick="openHumeurMgr()" style="display:none" title="Humeurs">😊</button>
+    <button class="hbtn red" id="logoutBtn" onclick="doLogout()" style="display:none" title="Déconnexion">🚪</button>
+  </div>
+</div>
+
+<div class="legend-bar">
+  <span style="color:var(--gold);font-size:9px;font-weight:700;letter-spacing:1px;flex-shrink:0">LÉGENDE</span>
+  <div class="legend-item"><div class="legend-dot" style="background:#2980B9"></div>Les Clés de Colette</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#27AE60"></div>Agence Aloha</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9B59B6"></div>Travel Paradise</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#F39C12"></div>Autre</div>
+  <div class="legend-item"><div style="width:10px;height:10px;border-radius:2px;background:#C0392B;flex-shrink:0"></div>Urgent</div>
+  <div class="legend-item"><div style="width:10px;height:10px;border-radius:2px;background:#95A5A6;flex-shrink:0"></div>Annulé</div>
+</div>
+
+<div class="toolbar">
+  <div class="week-nav">
+    <button onclick="changeWeek(-1)">‹</button>
+    <span class="week-label" id="weekLabel">Semaine</span>
+    <button onclick="changeWeek(1)">›</button>
+  </div>
+  <div id="filterChips" style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;flex:1;"></div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div class="calendar-wrap">
+  <div class="calendar" id="calendar"></div>
+</div>
+
+<!-- LOGIN -->
+<div class="overlay hidden" id="loginOverlay">
+  <div class="sheet">
+    <div class="sh-head"><div class="sh-head-row"><div class="sh-title">Connexion</div><button class="sh-close" onclick="closeLogin()">✕</button></div></div>
+    <div class="sh-body">
+      <div id="ls1">
+        <button class="role-btn" onclick="showStep('lsBoss')"><span style="font-size:22px">👑</span><div><div style="font-weight:700">Mode Boss</div><div style="font-size:11px;color:#777">Saisie, modification, tout accès</div></div></button>
+        <button class="role-btn" onclick="showStep('lsCList')"><span style="font-size:22px">🧹</span><div><div style="font-weight:700">Mode Consultant</div><div style="font-size:11px;color:#777">Consultation + se positionner + commenter</div></div></button>
+      </div>
+      <div id="lsBoss" style="display:none">
+        <div class="pin-wrap"><label>CODE BOSS</label><input type="password" id="bossInput" maxlength="6" placeholder="••••" onkeydown="if(event.key==='Enter')checkBoss()"/></div>
+        <button class="pin-submit" onclick="checkBoss()">Entrer →</button>
+        <div class="pin-error" id="bossErr">Code incorrect ❌</div>
+      </div>
+      <div id="lsCList" style="display:none">
+        <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;margin-bottom:8px">MON HUMEUR :</div>
+        <div class="consult-grid" id="consultGrid"></div>
+      </div>
+      <div id="lsCPin" style="display:none">
+        <div id="cPinLabel" style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px;text-align:center"></div>
+        <div class="pin-wrap"><label>MON CODE</label><input type="password" id="consultInput" maxlength="6" placeholder="••••" onkeydown="if(event.key==='Enter')checkConsultant()"/></div>
+        <button class="pin-submit" onclick="checkConsultant()">Entrer →</button>
+        <div class="pin-error" id="consultErr">Code incorrect ❌</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DÉTAIL MISSION -->
+<div class="overlay hidden" id="detailModal">
+  <div class="sheet" id="detailSheet"></div>
+</div>
+
+<!-- AJOUTER / MODIFIER -->
+<div class="overlay hidden" id="addModal">
+  <div class="sheet">
+    <div class="sh-head"><div class="sh-head-row"><div class="sh-title" id="addTitle">Nouvelle mission</div><button class="sh-close" onclick="closeAddModal()">✕</button></div></div>
+    <div class="sh-body">
+      <div class="f-group"><label class="f-label">NOM DU LOGEMENT</label><input class="f-input" id="f-nom" placeholder="ex: Le Portuaire" oninput="autoFillTarif(this.value)"/></div>
+      <div class="f-group"><label class="f-label">ADRESSE</label><input class="f-input" id="f-addr" placeholder="47 Av. du Lazaret, La Rochelle"/></div>
+      <div class="f-2col">
+        <div class="f-group"><label class="f-label">DATE</label><input class="f-input" id="f-date" type="date"/></div>
+        <div class="f-group"><label class="f-label">HORAIRES</label><input class="f-input" id="f-horaires" placeholder="10h→16h"/></div>
+      </div>
+      <div class="f-2col">
+        <div class="f-group"><label class="f-label">GRILLE</label>
+          <select class="f-select" id="f-grille"><option>T2 — 1h solo</option><option>T3 — 1h30 solo</option><option>T4 — 2h solo</option><option>T4 — 2h (1h chacun)</option><option>T5 — 2h30</option></select>
+        </div>
+        <div class="f-group"><label class="f-label">CONCIERGERIE</label>
+          <select class="f-select" id="f-client"><option>Les Clés de Colette</option><option>Agence Aloha</option><option>Travel Paradise</option><option>Autre</option></select>
+        </div>
+      </div>
+      <div class="f-group"><label class="f-label">CODE ACCÈS</label><input class="f-input" id="f-code" placeholder="ex: 0418"/></div>
+      <div class="f-group"><label class="f-label">💶 TARIF MISSION (€) — Boss uniquement</label><input class="f-input" id="f-tarif" type="number" min="0" placeholder="ex: 80" oninput=""/></div>
+      <div class="f-group"><label class="f-label">INSTRUCTIONS ACCÈS</label><textarea class="f-textarea" id="f-acces"></textarea></div>
+      <div class="f-group"><label class="f-label">NOTES / SPÉCIFICITÉS</label><textarea class="f-textarea" id="f-notes"></textarea></div>
+      <div class="f-group"><label class="f-label">🛏 LINGE</label>
+        <div class="supply-grid">
+          <div class="supply-item"><label>DH 160</label><input id="s-dh160" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>DH 90</label><input id="s-dh90" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>HC Double</label><input id="s-hcd" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>HC Simple</label><input id="s-hcs" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Serviettes</label><input id="s-serv" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Tapis bain</label><input id="s-tapis" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Torchons</label><input id="s-torch" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Canapé-lit</label><input id="s-canape" placeholder="ex: sur canapé"/></div>
+        </div>
+      </div>
+      <div class="f-group"><label class="f-label">☕ CONSOMMABLES</label>
+        <div class="supply-grid">
+          <div class="supply-item"><label>Café</label><input id="s-cafe" placeholder="Nespresso × 2"/></div>
+          <div class="supply-item"><label>Thé</label><input id="s-the" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Sucre</label><input id="s-sucre" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Papier WC</label><input id="s-pq" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Liquide vaisselle</label><input id="s-lv" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Sac noir</label><input id="s-noir" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Sac blanc</label><input id="s-blanc" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Éponge</label><input id="s-eponge" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Tab vaisselle</label><input id="s-tab" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Shampoing</label><input id="s-shamp" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Savon</label><input id="s-savon" type="number" min="0" placeholder="0"/></div>
+          <div class="supply-item"><label>Poubelle</label><input id="s-poubelle" placeholder="Point apport vol."/></div>
+        </div>
+      </div>
+      <div class="f-group"><label class="f-label">URGENT ?</label>
+        <div class="urg-row" id="urgRow" onclick="toggleUrgent()"><span id="urgIcon">⬜</span><span id="urgLbl" style="font-size:13px;font-weight:600">Pas urgent</span></div>
+      </div>
+      <button class="f-submit" onclick="submitMission()">✅ Enregistrer</button>
+      <button id="delBtn" style="display:none;width:100%;padding:10px;background:#FEF0EF;color:var(--urgent);border:1px solid var(--urgent);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;margin-top:7px;" onclick="deleteMission()">🗑 Supprimer définitivement</button>
+    </div>
+  </div>
+</div>
+
+<!-- DÉPLACER -->
+<div class="overlay hidden" id="moveModal">
+  <div class="sheet">
+    <div class="sh-head"><div class="sh-head-row"><div class="sh-title">Déplacer la mission</div><button class="sh-close" onclick="closeMoveModal()">✕</button></div></div>
+    <div class="sh-body">
+      <p style="font-size:12px;color:#555;margin-bottom:12px">Choisir la nouvelle date :</p>
+      <div class="f-group"><label class="f-label">NOUVELLE DATE</label><input class="f-input" id="moveDate" type="date"/></div>
+      <button class="f-submit" onclick="confirmMove()">📅 Déplacer</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT -->
+<div class="overlay hidden" id="importModal">
+  <div class="sheet">
+    <div class="sh-head"><div class="sh-head-row"><div class="sh-title">📥 Importer des missions</div><button class="sh-close" onclick="closeImportModal()">✕</button></div></div>
+    <div class="sh-body">
+      <p style="font-size:12px;color:#555;margin-bottom:12px;line-height:1.6">Colle le JSON généré par Claude, ou uploade un fichier .json.<br><strong>Les missions existantes sont conservées.</strong></p>
+      <div class="f-group"><label class="f-label">COLLER LE JSON</label>
+        <textarea class="f-textarea" id="importText" style="height:110px;font-size:11px;font-family:monospace;" placeholder="Colle le JSON ici..."></textarea>
+      </div>
+      <div class="f-group"><label class="f-label">OU UPLOADER UN FICHIER .JSON</label>
+        <label class="import-zone"><input type="file" accept=".json" style="display:none" onchange="importFile(this)"><div style="font-size:28px;margin-bottom:5px">📂</div><div style="font-size:11px;color:#666">Appuie pour choisir un fichier .json</div></label>
+      </div>
+      <button class="f-submit" onclick="importJSON()">✅ Ajouter au planning</button>
+      <div id="importMsg" style="display:none;margin-top:8px;padding:9px;border-radius:8px;font-size:12px;font-weight:700;text-align:center"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HUMEUR MANAGER -->
+<div class="overlay hidden" id="humeurMgrModal">
+  <div class="sheet">
+    <div class="sh-head"><div class="sh-head-row"><div class="sh-title">😊 Gérer les Humeurs</div><button class="sh-close" onclick="closeHumeurMgr()">✕</button></div></div>
+    <div class="sh-body">
+      <div id="humeurList" style="margin-bottom:14px;"></div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px">Ajouter une humeur</div>
+        <div class="f-2col">
+          <div class="f-group"><label class="f-label">EMOJI</label><input class="f-input" id="newHumeurEmoji" placeholder="ex: 🦁" style="font-size:20px;text-align:center"/></div>
+          <div class="f-group"><label class="f-label">NOM</label><input class="f-input" id="newHumeurName" placeholder="ex: Consultant 11"/></div>
+        </div>
+        <div class="f-group"><label class="f-label">CODE (4-6 chiffres)</label><input class="f-input" id="newHumeurCode" type="password" placeholder="••••"/></div>
+        <button class="f-submit" onclick="addHumeur()">➕ Ajouter</button>
+        <div id="humeurMsg" style="display:none;margin-top:7px;padding:8px;border-radius:8px;font-size:12px;font-weight:700;text-align:center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BOSS_PIN = "3107";
+
+// HUMEURS (consultants) — sauvegardées localement
+const DEFAULT_HUMEURS = [
+  {id:1,name:"Consultant 1",emoji:"☀️",code:"3208"},
+  {id:2,name:"Consultant 2",emoji:"👼",code:"3309"},
+  {id:3,name:"Consultant 3",emoji:"🌸",code:"3410"},
+  {id:4,name:"Consultant 4",emoji:"🌈",code:"3511"},
+  {id:5,name:"Consultant 5",emoji:"⭐",code:"3612"},
+  {id:6,name:"Consultant 6",emoji:"🏅",code:"3713"},
+  {id:7,name:"Consultant 7",emoji:"🪞",code:"3814"},
+  {id:8,name:"Consultant 8",emoji:"⛈️",code:"3915"},
+  {id:9,name:"Consultant 9",emoji:"🌧️",code:"4016"},
+  {id:10,name:"Consultant 10",emoji:"🤠",code:"4117"},
+];
+
+let humeurs = JSON.parse(localStorage.getItem('mlc_humeurs')||'null') || DEFAULT_HUMEURS;
+let missions = JSON.parse(localStorage.getItem('mlc_missions_v5')||'null') || getDefaults();
+let mode = "guest";
+let myConsultant = null;
+let activeFilter = "all";
+let weekOffset = 0;
+let urgentOn = false;
+let editingId = null;
+let movingId = null;
+let pendingConsultant = null;
+
+function saveM(){localStorage.setItem('mlc_missions_v5',JSON.stringify(missions));}
+function saveH(){localStorage.setItem('mlc_humeurs',JSON.stringify(humeurs));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+function getDefaults(){
+  return [
+    {id:uid(),nom:"Le Portuaire",adresse:"47 Av. du Lazaret, La Rochelle",date:"2026-06-24",horaires:"10h→16h",grille:"T2 — 1h solo",client:"Les Clés de Colette",code:"0418",acces:"Sonner LEMASLE N°207 → Ascenseur 2e étage → Apt 208 passerelle gauche",notes:"Arrivée locataires le même jour",urgent:true,done:false,cancelled:false,moods:[],comments:[],photos:[],linge:{dh160:1,dh90:0,hcd:0,hcs:1,serv:2,tapis:1,torch:2,canape:""},conso:{cafe:"Senseo × 2",the:2,sucre:2,pq:2,lv:1,noir:1,blanc:1,eponge:1,tab:1,shamp:1,savon:1,poubelle:"Point apport vol."}},
+    {id:uid(),nom:"La Cachette",adresse:"37 Rue la Fée, La Rochelle",date:"2026-06-24",horaires:"10h→16h",grille:"T2 — 1h solo",client:"Les Clés de Colette",code:"",acces:"",notes:"Prochaine arrivée sam 27 juin",urgent:false,done:false,cancelled:false,moods:[],comments:[],photos:[],linge:{dh160:1,dh90:0,hcd:0,hcs:1,serv:2,tapis:1,torch:2,canape:"Sur canapé"},conso:{cafe:"Nespresso × 2",the:2,sucre:2,pq:2,lv:1,noir:1,blanc:1,eponge:1,tab:1,shamp:1,savon:1,poubelle:"Point apport vol."}},
+    {id:uid(),nom:"Le Paradis Bleu",adresse:"37 Av. François Mitterrand, L'Houmeau",date:"2026-06-20",horaires:"10h→16h",grille:"T4 — 2h solo",client:"Les Clés de Colette",code:"0201",acces:"Boîte clé local poubelle, code 0201.",notes:"Prochaine arrivée dim 05 juillet",urgent:false,done:false,cancelled:false,moods:[],comments:[],photos:[],linge:{dh160:2,dh90:3,hcd:2,hcs:3,serv:4,tapis:2,torch:2,canape:"Placard ch."},conso:{cafe:"Nespresso × 4",the:4,sucre:4,pq:4,lv:1,noir:1,blanc:2,eponge:1,tab:1,shamp:1,savon:1,poubelle:"Bac devant"}},
+  ];
+}
+
+// ── SEMAINE ──
+function getWeekDates(offset){
+  const now=new Date(),day=now.getDay(),mon=new Date(now);
+  mon.setDate(now.getDate()-(day===0?6:day-1)+offset*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+}
+function fmtIso(d){return d.toISOString().split('T')[0];}
+function fmtShort(d){
+  const days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'],months=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+  return {day:days[d.getDay()],date:`${d.getDate()} ${months[d.getMonth()]}`};
+}
+function changeWeek(dir){weekOffset+=dir;renderAll();}
+
+function clientColor(c){
+  if(c.includes('Colette'))return 'bg-colette';
+  if(c.includes('Aloha'))return 'bg-aloha';
+  if(c.includes('Paradise'))return 'bg-paradise';
+  return 'bg-autre';
+}
+
+// ── HEURES ──
+function parseHours(grille){
+  if(!grille)return 0;
+  const m=grille.match(/(\d+)h(\d+)?/);
+  if(!m)return 0;
+  return parseInt(m[1])+(m[2]?parseInt(m[2])/60:0);
+}
+
+// ── TARIFS PAR LOGEMENT ──
+const TARIFS_LOGEMENTS = {
+  "evasion":25,"la marina":25,"la lanterne":25,"le lagon":25,"le mirano":25,
+  "le templier":25,"libero":25,"lumea":25,"manova":25,"marché central":25,
+  "nautique":25,"olympe":25,"ozeo":25,"terra cotta":25,"equinoxe":25,
+  "verdière":25,"virelia":25,"le vauban de ré":40,"maison mandarine":40,
+  "marius":40,"serenita":40,"le petit jars":40,"repos urbain":55,
+  "mezzanine":55,"maison morin":60,"villa des grasses":80,"peres":80,
+  "maison bowyer":100,"leudaste":100,"ostaria":120,"plein soleil en ré":120,
+  "villa océane":120,"villa mandarine":140,"maison rousseau":0
+};
+function autoFillTarif(nom){
+  const key=(nom||'').toLowerCase().trim();
+  const tarif=TARIFS_LOGEMENTS[key];
+  if(tarif!==undefined){const el=document.getElementById('f-tarif');if(el)el.value=tarif;}
+}
+
+// ── RENDER ALL ──
+function renderAll(){renderWeekLabel();renderFilters();renderStats();renderCalendar();}
+
+function renderWeekLabel(){
+  const dates=getWeekDates(weekOffset);
+  const s=fmtShort(dates[0]),e=fmtShort(dates[6]);
+  document.getElementById('weekLabel').textContent=`${s.date} – ${e.date}`;
+}
+
+function renderFilters(){
+  const wrap=document.getElementById('filterChips');
+  let html=`<button class="filter-chip ${activeFilter==='all'?'active':''}" onclick="setFilter('all')">Tout voir</button>`;
+  humeurs.forEach(h=>{
+    html+=`<button class="filter-chip ${activeFilter===h.id?'active':''}" onclick="setFilter(${h.id})">${h.emoji} ${h.name}</button>`;
+  });
+  wrap.innerHTML=html;
+}
+
+function setFilter(id){activeFilter=id==='all'?'all':parseInt(id)||id;renderFilters();renderStats();renderCalendar();}
+
+function renderStats(){
+  const bar=document.getElementById('statsBar');
+  const dates=getWeekDates(weekOffset);
+  const isos=dates.map(fmtIso);
+  let weekMissions=missions.filter(m=>isos.includes(m.date)&&!m.cancelled);
+  if(activeFilter!=='all') weekMissions=weekMissions.filter(m=>m.moods&&m.moods.includes(activeFilter));
+  const totalH=weekMissions.reduce((s,m)=>s+parseHours(m.grille),0);
+  const done=weekMissions.filter(m=>m.done).length;
+  const total=weekMissions.length;
+  let statsHtml=`<span class="stat-item">Semaine : <strong>${total} mission(s)</strong></span>
+    <span class="stat-item">Heures : <strong>${totalH.toFixed(1)}h</strong></span>
+    <span class="stat-item">Terminées : <strong>${done}/${total}</strong></span>`;
+  if(activeFilter!=='all'){
+    const h=humeurs.find(x=>x.id===activeFilter);
+    if(h) statsHtml=`<span class="stat-item">${h.emoji} ${h.name} — </span>`+statsHtml;
+  }
+
+  // Stats Boss uniquement : CA + heures par humeur
+  if(mode==='boss'){
+    // CA par conciergerie
+    const caMap={};
+    let caTotal=0;
+    missions.filter(m=>isos.includes(m.date)&&!m.cancelled&&m.tarif>0).forEach(m=>{
+      caMap[m.client]=(caMap[m.client]||0)+(m.tarif||0);
+      caTotal+=(m.tarif||0);
+    });
+    const caItems=Object.entries(caMap).map(([c,v])=>`<span class="stat-item">💶 ${c.split(' ').pop()} : <strong>${v}€</strong></span>`).join('');
+    if(caTotal>0) statsHtml+=caItems+`<span class="stat-item" style="color:#C9A84C;font-weight:700">💰 Total : <strong>${caTotal}€</strong></span>`;
+
+    // Heures par humeur (grille salarié : T4/T5 = par personne)
+    const hMap={};
+    const allWeekM=missions.filter(m=>isos.includes(m.date)&&!m.cancelled);
+    allWeekM.forEach(m=>{
+      const g=m.grille||'';
+      let hPerPerson=parseHours(g);
+      // T4 et T5 = 2 personnes → heures par personne = moitié
+      if(g.includes('1h chacun')||g==='T4 — 2h (1h chacun)') hPerPerson=1;
+      else if(g.includes('T5')) hPerPerson=1.25;
+      (m.moods||[]).forEach(mid=>{hMap[mid]=(hMap[mid]||0)+hPerPerson;});
+    });
+    const hItems=Object.entries(hMap).map(([mid,h])=>{
+      const hum=humeurs.find(x=>x.id===parseInt(mid)||x.id===mid);
+      return hum?`<span class="stat-item">${hum.emoji} ${hum.name} : <strong>${h.toFixed(1)}h</strong></span>`:'';
+    }).filter(Boolean).join('');
+    if(hItems) statsHtml+=`<span class="stat-item" style="color:#4fc3f7">⏱ Heures/humeur :</span>`+hItems;
+  }
+
+  bar.innerHTML=statsHtml;
+}
+
+function renderCalendar(){
+  const dates=getWeekDates(weekOffset);
+  const todayIso=fmtIso(new Date());
+  document.getElementById('calendar').innerHTML=dates.map(d=>{
+    const iso=fmtIso(d);
+    const {day,date}=fmtShort(d);
+    let dayM=missions.filter(m=>m.date===iso);
+    if(activeFilter!=='all') dayM=dayM.filter(m=>m.moods&&m.moods.includes(activeFilter));
+    dayM.sort((a,b)=>(a.cancelled?1:0)-(b.cancelled?1:0));
+    return `<div class="day-col">
+      <div class="day-header ${iso===todayIso?'today':''}">
+        <div class="day-name">${day}</div><div class="day-date">${date}</div>
+      </div>
+      <div class="day-content">
+        ${dayM.map(m=>renderCard(m)).join('')||'<div style="color:#2A3A4A;font-size:10px;text-align:center;padding:10px">—</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCard(m){
+  const moodEmojis=(m.moods||[]).map(id=>{const h=humeurs.find(x=>x.id===id);return h?h.emoji:'';}).join('');
+  return `<div class="m-card ${clientColor(m.client)} ${m.cancelled?'cancelled':''}" onclick="openDetail('${m.id}')">
+    <div class="m-card-head">
+      <div class="m-card-name">${m.cancelled?'❌ ':m.urgent?'⚠️ ':''}${m.nom}</div>
+      <div class="m-card-time">⏰ ${m.horaires} · ${(m.grille||'').split('—')[0].trim()}</div>
+      <div class="m-card-addr">📍 ${(m.adresse||'').split(',')[0]}</div>
+    </div>
+    <div class="m-card-bottom">
+      <div class="m-card-moods">${moodEmojis||'<span style="color:rgba(255,255,255,0.3);font-size:10px">—</span>'}</div>
+      <div class="m-card-badge">${m.cancelled?'ANNULÉ':m.done?'✓ FAIT':m.urgent?'⚠ URG':''}</div>
+    </div>
+  </div>`;
+}
+
+// ── DÉTAIL ──
+function openDetail(id){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  document.getElementById('detailModal').classList.remove('hidden');
+  renderDetail(id);
+}
+function closeDetail(){document.getElementById('detailModal').classList.add('hidden');}
+
+function renderDetail(id){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  const l=m.linge||{},c=m.conso||{};
+
+  const lingeRows=[
+    l.dh160>0?`<div class="info-row"><span class="info-label">DH 160cm</span><span class="info-val">${l.dh160}</span></div>`:'',
+    l.dh90>0?`<div class="info-row"><span class="info-label">DH 90cm</span><span class="info-val">${l.dh90}</span></div>`:'',
+    l.hcd>0?`<div class="info-row"><span class="info-label">HC Double</span><span class="info-val">${l.hcd}</span></div>`:'',
+    l.hcs>0?`<div class="info-row"><span class="info-label">HC Simple</span><span class="info-val">${l.hcs}</span></div>`:'',
+    l.serv>0?`<div class="info-row"><span class="info-label">Serviettes</span><span class="info-val">${l.serv}</span></div>`:'',
+    l.tapis>0?`<div class="info-row"><span class="info-label">Tapis bain</span><span class="info-val">${l.tapis}</span></div>`:'',
+    l.torch>0?`<div class="info-row"><span class="info-label">Torchons</span><span class="info-val">${l.torch}</span></div>`:'',
+    l.canape?`<div class="info-row"><span class="info-label">Canapé-lit</span><span class="info-val">${l.canape}</span></div>`:'',
+  ].filter(Boolean).join('');
+
+  const consoRows=[
+    c.cafe?`<div class="info-row"><span class="info-label">Café</span><span class="info-val">${c.cafe}</span></div>`:'',
+    c.the>0?`<div class="info-row"><span class="info-label">Thé</span><span class="info-val">${c.the}</span></div>`:'',
+    c.sucre>0?`<div class="info-row"><span class="info-label">Sucre</span><span class="info-val">${c.sucre}</span></div>`:'',
+    c.pq>0?`<div class="info-row"><span class="info-label">Papier WC</span><span class="info-val">${c.pq}</span></div>`:'',
+    c.lv>0?`<div class="info-row"><span class="info-label">Liquide vaisselle</span><span class="info-val">${c.lv}</span></div>`:'',
+    c.noir>0?`<div class="info-row"><span class="info-label">Sac noir</span><span class="info-val">${c.noir}</span></div>`:'',
+    c.blanc>0?`<div class="info-row"><span class="info-label">Sac blanc</span><span class="info-val">${c.blanc}</span></div>`:'',
+    c.eponge>0?`<div class="info-row"><span class="info-label">Éponge</span><span class="info-val">${c.eponge}</span></div>`:'',
+    c.tab>0?`<div class="info-row"><span class="info-label">Tab vaisselle</span><span class="info-val">${c.tab}</span></div>`:'',
+    c.shamp>0?`<div class="info-row"><span class="info-label">Shampoing</span><span class="info-val">${c.shamp}</span></div>`:'',
+    c.savon>0?`<div class="info-row"><span class="info-label">Savon</span><span class="info-val">${c.savon}</span></div>`:'',
+    c.poubelle?`<div class="info-row"><span class="info-label">Poubelle</span><span class="info-val">${c.poubelle}</span></div>`:'',
+  ].filter(Boolean).join('');
+
+  // Humeurs pills
+  const moodPills=humeurs.map(h=>{
+    const sel=(m.moods||[]).includes(h.id);
+    const isMine=myConsultant&&myConsultant.id===h.id;
+    const canToggle=mode==='boss'||isMine;
+    return `<div class="mood-pill ${sel?'selected':''}" onclick="${canToggle?`toggleMood('${m.id}',${h.id})`:''}">
+      ${h.emoji} ${h.name}${sel&&canToggle?`<span class="remove-mood">✕</span>`:''}
+    </div>`;
+  }).join('');
+
+  // Commentaires
+  const commentItems=(m.comments||[]).map((c,i)=>`
+    <div class="comment-item">
+      <div class="comment-meta">${c.author} · ${c.date}</div>
+      <div class="comment-text">${c.text}</div>
+      ${mode==='boss'?`<div style="text-align:right;margin-top:4px"><button onclick="deleteComment('${m.id}',${i})" style="background:none;border:none;color:#C0392B;font-size:10px;cursor:pointer">Supprimer</button></div>`:''}
+    </div>`).join('');
+
+  const canComment=mode==='boss'||mode==='consultant';
+  const commentAdd=canComment?`<div class="comment-add">
+    <textarea id="commentInput_${m.id}" placeholder="Ajouter un commentaire..."></textarea>
+    <button onclick="addComment('${m.id}')">Envoyer</button>
+  </div>`:'';
+
+  // Photos
+  const canPhoto=mode==='boss'||mode==='consultant';
+  const photoGrid=`<div class="photos-grid">
+    ${(m.photos||[]).map((p,i)=>`<div style="position:relative"><img class="photo-thumb" src="${p}"/>
+      ${mode==='boss'?`<button onclick="deletePhoto('${m.id}',${i})" style="position:absolute;top:2px;right:2px;background:rgba(192,57,43,0.9);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer">✕</button>`:''}
+    </div>`).join('')}
+    ${canPhoto?`<label class="photo-add"><input type="file" accept="image/*,video/*" style="display:none" onchange="addPhoto('${m.id}',this)">📷</label>`:''}
+  </div>`;
+
+  // Actions Boss
+  const bossActions=mode==='boss'?`<div class="action-btns">
+    <button class="ab ab-edit" onclick="openEditModal('${m.id}')">✏️ Modifier</button>
+    <button class="ab ab-move" onclick="openMoveModal('${m.id}')">📅 Déplacer</button>
+    ${m.cancelled
+      ?`<button class="ab ab-restore" onclick="restoreMission('${m.id}')">↩️ Restaurer</button>`
+      :`<button class="ab ab-cancel" onclick="cancelMission('${m.id}')">⛔ Annuler</button>`}
+    <button class="ab ab-delete" onclick="confirmDelete('${m.id}')">🗑 Supprimer</button>
+  </div>`:'';
+
+  // Done row
+  const doneRow=(mode==='boss'||mode==='consultant')&&!m.cancelled?`
+    <div class="action-row" onclick="toggleDone('${m.id}')">
+      <div class="cbx ${m.done?'on':''}"></div>
+      <span class="action-lbl">${m.done?'Mission terminée ✓':'Marquer comme terminée'}</span>
+    </div>`:'';
+
+  document.getElementById('detailSheet').innerHTML=`
+    <div class="sh-head">
+      <div class="sh-head-row">
+        <div>
+          <div class="sh-title">${m.cancelled?'❌ ':m.urgent?'⚠️ ':''}${m.nom}</div>
+          <div class="sh-sub">📍 ${m.adresse||'—'} · ${m.horaires} · ${m.grille}</div>
+        </div>
+        <button class="sh-close" onclick="closeDetail()">✕</button>
+      </div>
+      ${m.cancelled?`<div style="background:#FEF0EF;color:#C0392B;font-size:11px;font-weight:700;padding:5px 8px;border-radius:6px;margin-top:6px">⛔ Mission annulée — visible uniquement</div>`:''}
+    </div>
+    <div class="sh-body">
+      ${m.code?`<div class="section"><div class="sec-title">🔑 Accès</div><div class="code-box">${m.code}</div>${m.acces?`<div class="acces-text">${m.acces}</div>`:''}</div>`:''}
+      ${mode==='boss'&&m.tarif>0?`<div class="section"><div class="sec-title">💶 Tarif mission</div><div style="font-size:20px;font-weight:700;color:#C9A84C;padding:6px 0">${m.tarif} €</div></div>`:''}
+      ${m.notes?`<div class="section"><div class="notes-box">📌 ${m.notes}</div></div>`:''}
+      ${lingeRows?`<div class="section"><div class="sec-title">🛏 Linge</div>${lingeRows}</div>`:''}
+      ${consoRows?`<div class="section"><div class="sec-title">☕ Consommables</div>${consoRows}</div>`:''}
+      <div class="section"><div class="sec-title">😊 Humeurs positionnées</div><div class="moods-grid">${moodPills}</div></div>
+      <div class="section"><div class="sec-title">💬 Commentaires</div><div class="comment-list">${commentItems||'<div style="font-size:11px;color:#aaa">Aucun commentaire</div>'}</div>${commentAdd}</div>
+      <div class="section"><div class="sec-title">📸 Photos / Vidéos</div>${photoGrid}</div>
+      ${doneRow}
+      ${bossActions}
+    </div>`;
+}
+
+function toggleMood(id,moodId){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  if(!m.moods)m.moods=[];
+  const i=m.moods.indexOf(moodId);
+  if(i>=0)m.moods.splice(i,1);else m.moods.push(moodId);
+  saveM();renderDetail(id);renderCalendar();renderStats();
+}
+
+function toggleDone(id){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  m.done=!m.done;saveM();renderDetail(id);renderCalendar();renderStats();
+}
+
+function cancelMission(id){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  if(!confirm('Annuler cette mission ? Elle restera visible mais barrée.'))return;
+  m.cancelled=true;saveM();renderDetail(id);renderCalendar();
+}
+function restoreMission(id){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  m.cancelled=false;saveM();renderDetail(id);renderCalendar();
+}
+function confirmDelete(id){
+  if(!confirm('Supprimer définitivement cette mission ?'))return;
+  missions=missions.filter(m=>m.id!==id);saveM();closeDetail();renderCalendar();renderStats();
+}
+
+function addComment(id){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  const el=document.getElementById('commentInput_'+id);
+  const text=el?el.value.trim():'';if(!text)return;
+  if(!m.comments)m.comments=[];
+  const author=mode==='boss'?'👑 Boss':(myConsultant?myConsultant.emoji+' '+myConsultant.name:'Visiteur');
+  m.comments.push({text,author,date:new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})});
+  saveM();renderDetail(id);
+}
+function deleteComment(id,idx){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  m.comments.splice(idx,1);saveM();renderDetail(id);
+}
+
+function addPhoto(id,input){
+  const m=missions.find(x=>x.id===id);if(!m||!input.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{if(!m.photos)m.photos=[];m.photos.push(e.target.result);saveM();renderDetail(id);};
+  r.readAsDataURL(input.files[0]);
+}
+function deletePhoto(id,idx){
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  m.photos.splice(idx,1);saveM();renderDetail(id);
+}
+
+// ── ADD / EDIT ──
+function openAddModal(){
+  if(mode!=='boss'){alert('Mode Boss requis');return;}
+  editingId=null;
+  document.getElementById('addTitle').textContent='Nouvelle mission';
+  document.getElementById('delBtn').style.display='none';
+  clearForm();
+  document.getElementById('f-date').value=fmtIso(new Date());
+  document.getElementById('addModal').classList.remove('hidden');
+}
+function openEditModal(id){
+  if(mode!=='boss')return;
+  closeDetail();editingId=id;
+  const m=missions.find(x=>x.id===id);if(!m)return;
+  document.getElementById('addTitle').textContent='Modifier la mission';
+  document.getElementById('delBtn').style.display='block';
+  document.getElementById('f-nom').value=m.nom||'';
+  document.getElementById('f-addr').value=m.adresse||'';
+  document.getElementById('f-date').value=m.date||'';
+  document.getElementById('f-horaires').value=m.horaires||'';
+  document.getElementById('f-code').value=m.code||'';
+  document.getElementById('f-tarif').value=m.tarif||'';
+  document.getElementById('f-acces').value=m.acces||'';
+  document.getElementById('f-notes').value=m.notes||'';
+  const l=m.linge||{},c=m.conso||{};
+  ['dh160','dh90','hcd','hcs','serv','tapis','torch'].forEach(k=>{document.getElementById('s-'+k).value=l[k]||0;});
+  document.getElementById('s-canape').value=l.canape||'';
+  document.getElementById('s-cafe').value=c.cafe||'';
+  ['the','sucre','pq','lv','noir','blanc','eponge','tab','shamp','savon'].forEach(k=>{document.getElementById('s-'+k).value=c[k]||0;});
+  document.getElementById('s-poubelle').value=c.poubelle||'';
+  urgentOn=m.urgent||false;
+  document.getElementById('urgIcon').textContent=urgentOn?'🔴':'⬜';
+  document.getElementById('urgLbl').textContent=urgentOn?'URGENT':'Pas urgent';
+  document.getElementById('urgRow').classList.toggle('on',urgentOn);
+  document.getElementById('f-grille').value=m.grille||'';
+  document.getElementById('f-client').value=m.client||'';
+  document.getElementById('addModal').classList.remove('hidden');
+}
+function closeAddModal(){document.getElementById('addModal').classList.add('hidden');editingId=null;}
+function clearForm(){
+  ['f-nom','f-addr','f-horaires','f-code','f-tarif','f-acces','f-notes','s-canape','s-cafe','s-poubelle'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['s-dh160','s-dh90','s-hcd','s-hcs','s-serv','s-tapis','s-torch','s-the','s-sucre','s-pq','s-lv','s-noir','s-blanc','s-eponge','s-tab','s-shamp','s-savon'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=0;});
+  urgentOn=false;document.getElementById('urgIcon').textContent='⬜';document.getElementById('urgLbl').textContent='Pas urgent';document.getElementById('urgRow').classList.remove('on');
+}
+function gv(id){const e=document.getElementById(id);return e?e.value:'';}
+function gn(id){const v=parseInt(gv(id));return isNaN(v)?0:v;}
+function toggleUrgent(){urgentOn=!urgentOn;document.getElementById('urgIcon').textContent=urgentOn?'🔴':'⬜';document.getElementById('urgLbl').textContent=urgentOn?'URGENT':'Pas urgent';document.getElementById('urgRow').classList.toggle('on',urgentOn);}
+
+function submitMission(){
+  const nom=gv('f-nom').trim();if(!nom){alert('Nom obligatoire');return;}
+  const data={nom,adresse:gv('f-addr'),date:gv('f-date')||fmtIso(new Date()),horaires:gv('f-horaires')||'10h→16h',grille:gv('f-grille'),client:gv('f-client'),code:gv('f-code'),tarif:parseFloat(gv('f-tarif'))||0,acces:gv('f-acces'),notes:gv('f-notes'),urgent:urgentOn,
+    linge:{dh160:gn('s-dh160'),dh90:gn('s-dh90'),hcd:gn('s-hcd'),hcs:gn('s-hcs'),serv:gn('s-serv'),tapis:gn('s-tapis'),torch:gn('s-torch'),canape:gv('s-canape')},
+    conso:{cafe:gv('s-cafe'),the:gn('s-the'),sucre:gn('s-sucre'),pq:gn('s-pq'),lv:gn('s-lv'),noir:gn('s-noir'),blanc:gn('s-blanc'),eponge:gn('s-eponge'),tab:gn('s-tab'),shamp:gn('s-shamp'),savon:gn('s-savon'),poubelle:gv('s-poubelle')}};
+  if(editingId){const idx=missions.findIndex(m=>m.id===editingId);if(idx>=0)missions[idx]={...missions[idx],...data};}
+  else missions.push({id:uid(),done:false,cancelled:false,moods:[],comments:[],photos:[],...data});
+  saveM();closeAddModal();renderCalendar();renderStats();
+}
+function deleteMission(){
+  if(!editingId||!confirm('Supprimer définitivement ?'))return;
+  missions=missions.filter(m=>m.id!==editingId);saveM();closeAddModal();renderCalendar();renderStats();
+}
+
+// ── DÉPLACER ──
+function openMoveModal(id){movingId=id;document.getElementById('moveDate').value=missions.find(m=>m.id===id)?.date||fmtIso(new Date());document.getElementById('moveModal').classList.remove('hidden');}
+function closeMoveModal(){document.getElementById('moveModal').classList.add('hidden');movingId=null;}
+function confirmMove(){
+  const newDate=document.getElementById('moveDate').value;if(!newDate||!movingId)return;
+  const m=missions.find(x=>x.id===movingId);if(!m)return;
+  m.date=newDate;saveM();closeMoveModal();closeDetail();renderCalendar();renderStats();
+}
+
+// ── IMPORT / EXPORT ──
+function openImportModal(){document.getElementById('importModal').classList.remove('hidden');document.getElementById('importText').value='';document.getElementById('importMsg').style.display='none';}
+function closeImportModal(){document.getElementById('importModal').classList.add('hidden');}
+function importFile(input){if(!input.files[0])return;const r=new FileReader();r.onload=e=>{document.getElementById('importText').value=e.target.result;};r.readAsText(input.files[0]);}
+function importJSON(){
+  const raw=document.getElementById('importText').value.trim();if(!raw){alert('Colle du JSON ou uploade un fichier');return;}
+  try{
+    let parsed=JSON.parse(raw);
+    let newM=Array.isArray(parsed)?parsed:(parsed.missions||[]);
+    newM=newM.map(m=>({...m,id:m.id||uid(),moods:m.moods||[],comments:m.comments||[],photos:m.photos||[],cancelled:m.cancelled||false}));
+    // Ne jamais écraser — toujours ajouter (éviter doublons par id)
+    const existIds=new Set(missions.map(m=>m.id));
+    const toAdd=newM.filter(m=>!existIds.has(m.id));
+    missions=[...missions,...toAdd];
+    saveM();
+    const msg=document.getElementById('importMsg');
+    msg.style.display='block';msg.style.background='#EAFAF1';msg.style.color='#1E8449';
+    msg.textContent=`✅ ${toAdd.length} mission(s) ajoutée(s) · ${newM.length-toAdd.length} doublon(s) ignoré(s)`;
+    setTimeout(()=>{closeImportModal();renderAll();},1600);
+  }catch(e){
+    const msg=document.getElementById('importMsg');msg.style.display='block';msg.style.background='#FEF0EF';msg.style.color='#C0392B';
+    msg.textContent='❌ JSON invalide. Vérifie le format.';
+  }
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(missions,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`mileclat_${fmtIso(new Date())}.json`;a.click();
+}
+
+// ── HUMEUR MANAGER ──
+function openHumeurMgr(){document.getElementById('humeurMgrModal').classList.remove('hidden');renderHumeurList();}
+function closeHumeurMgr(){document.getElementById('humeurMgrModal').classList.add('hidden');}
+function renderHumeurList(){
+  document.getElementById('humeurList').innerHTML=humeurs.map(h=>`
+    <div class="humeur-item">
+      <span class="humeur-emoji">${h.emoji}</span>
+      <span class="humeur-name">${h.name} <span style="color:#aaa;font-size:10px">· code ****</span></span>
+      <button class="humeur-del" onclick="removeHumeur(${h.id})">Supprimer</button>
+    </div>`).join('');
+}
+function removeHumeur(id){
+  if(!confirm('Supprimer cette humeur ?'))return;
+  humeurs=humeurs.filter(h=>h.id!==id);saveH();renderHumeurList();renderFilters();renderCalendar();
+}
+function addHumeur(){
+  const emoji=document.getElementById('newHumeurEmoji').value.trim();
+  const name=document.getElementById('newHumeurName').value.trim();
+  const code=document.getElementById('newHumeurCode').value.trim();
+  if(!emoji||!name||!code){alert('Emoji, nom et code obligatoires');return;}
+  const newId=Math.max(...humeurs.map(h=>h.id),0)+1;
+  humeurs.push({id:newId,name,emoji,code});saveH();
+  document.getElementById('newHumeurEmoji').value='';document.getElementById('newHumeurName').value='';document.getElementById('newHumeurCode').value='';
+  const msg=document.getElementById('humeurMsg');msg.style.display='block';msg.style.background='#EAFAF1';msg.style.color='#1E8449';msg.textContent=`✅ ${emoji} ${name} ajouté !`;
+  renderHumeurList();renderFilters();setTimeout(()=>{msg.style.display='none';},2000);
+}
+
+// ── LOGIN ──
+function openLogin(){document.getElementById('loginOverlay').classList.remove('hidden');showStep('ls1');}
+function closeLogin(){document.getElementById('loginOverlay').classList.add('hidden');}
+function showStep(id){['ls1','lsBoss','lsCList','lsCPin'].forEach(s=>{const e=document.getElementById(s);if(e)e.style.display='none';});const t=document.getElementById(id);if(t)t.style.display='block';}
+function showBossPin(){showStep('lsBoss');document.getElementById('bossInput').value='';document.getElementById('bossErr').style.display='none';}
+function checkBoss(){
+  if(document.getElementById('bossInput').value===BOSS_PIN){setMode('boss',null);closeLogin();}
+  else document.getElementById('bossErr').style.display='block';
+}
+function showConsultantList(){
+  showStep('lsCList');
+  document.getElementById('consultGrid').innerHTML=humeurs.map(h=>`
+    <div class="consult-btn" onclick="pickConsultant(${h.id})">
+      <span class="ce">${h.emoji}</span><span>${h.name}</span>
+    </div>`).join('');
+}
+function pickConsultant(id){
+  pendingConsultant=humeurs.find(h=>h.id===id);
+  document.getElementById('cPinLabel').textContent=pendingConsultant.emoji+' '+pendingConsultant.name;
+  document.getElementById('consultInput').value='';document.getElementById('consultErr').style.display='none';
+  showStep('lsCPin');
+}
+function checkConsultant(){
+  if(pendingConsultant&&document.getElementById('consultInput').value===pendingConsultant.code){
+    setMode('consultant',pendingConsultant);closeLogin();
+  } else document.getElementById('consultErr').style.display='block';
+}
+
+function setMode(m,consultant){
+  mode=m;myConsultant=consultant;
+  const boss=m==='boss',isConsultant=m==='consultant';
+  document.getElementById('modeBadge').textContent=boss?'👑 Boss':isConsultant?consultant.emoji+' '+consultant.name:'👁 Visiteur';
+  document.getElementById('modeBadge').className='mode-badge'+(isConsultant?' consultant':!boss?' guest':'');
+  document.getElementById('headerSub').textContent=boss?'Mode Gestionnaire':isConsultant?'Mode Consultant':'Planning Missions';
+  ['addBtn','importBtn','exportBtn','humeurMgrBtn'].forEach(id=>{document.getElementById(id).style.display=boss?'flex':'none';});
+  document.getElementById('logoutBtn').style.display=(boss||isConsultant)?'flex':'none';
+  if(isConsultant){activeFilter=consultant.id;}
+  renderAll();
+}
+function doLogout(){mode='guest';myConsultant=null;activeFilter='all';setMode('guest',null);}
+
+// ── INIT ──
+renderAll();
+</script>
+</body>
+</html>
